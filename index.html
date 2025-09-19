@@ -1,0 +1,1679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug the Candy - Innotech Club</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0f 0%, #0f0f1a 50%, #1a1a2e 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: rgba(10, 10, 20, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 10px 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            font-size: 14px;
+            font-weight: bold;
+            color: #00ffff;
+        }
+
+        .header-center {
+            text-align: center;
+            flex-grow: 1;
+        }
+
+        .header-center h1 {
+            font-size: 20px;
+            color: #ffffff;
+            margin-bottom: 2px;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .header-center p {
+            font-size: 10px;
+            color: #94a3b8;
+            margin-bottom: 5px;
+        }
+
+        .header-right {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 2px solid #00ffff;
+            background: linear-gradient(45deg, #0a0a0f, #1a1a2e);
+        }
+
+        .header-right img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 15px;
+            max-width: 100%;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .welcome-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #0a0a0f, #1a1a2e, #2a2a4e);
+            padding: 30px 20px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+        }
+
+        .modal-content h2 {
+            margin-bottom: 15px;
+            color: #ffffff;
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+            font-size: 20px;
+        }
+
+        .modal-content p {
+            color: #94a3b8;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 15px;
+            margin: 15px 0;
+            border: 2px solid #475569;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+            background: rgba(10, 10, 20, 0.8);
+            color: #e2e8f0;
+        }
+
+        .modal-content input:focus {
+            border-color: #00ffff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #00cccc, #0099cc);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 255, 255, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .game-container {
+            display: none;
+        }
+
+        .stats-bar {
+            background: linear-gradient(135deg, #0a0a0f, #1a1a2e);
+            padding: 15px 10px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+        }
+
+        .stat {
+            text-align: center;
+            padding: 5px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #00ffff;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: #94a3b8;
+            margin-top: 3px;
+        }
+
+        .timer-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .timer {
+            font-size: 22px;
+            font-weight: bold;
+            color: #ffaa00;
+            text-shadow: 0 0 10px rgba(255, 170, 0, 0.5);
+        }
+
+        .timer.warning {
+            color: #ff4444;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .challenge-card {
+            background: linear-gradient(135deg, #0a0a0f, #1a1a2e);
+            border-radius: 15px;
+            padding: 20px 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+        }
+
+        .challenge-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .challenge-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffffff;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .difficulty-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(135deg, #00cc66, #009944);
+            box-shadow: 0 0 10px rgba(0, 204, 102, 0.3);
+            flex-shrink: 0;
+        }
+
+        .code-container {
+            background: #000008;
+            border-radius: 10px;
+            padding: 15px 10px;
+            margin: 15px 0;
+            overflow-x: auto;
+            position: relative;
+            border: 1px solid #334155;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+            max-height: 300px;
+        }
+
+        .code-content {
+            font-family: 'Courier New', monospace;
+            color: #e2e8f0;
+            line-height: 1.4;
+            white-space: pre;
+            font-size: 12px;
+        }
+
+        .line-numbers {
+            color: #00ffff;
+            margin-right: 15px;
+            user-select: none;
+            opacity: 0.7;
+        }
+
+        .answer-section {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .answer-input {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px;
+            border: 2px solid #475569;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+            background: rgba(10, 10, 20, 0.8);
+            color: #e2e8f0;
+            transition: all 0.3s;
+        }
+
+        .answer-input:focus {
+            border-color: #00ffff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #00cc66, #009944);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-size: 14px;
+            box-shadow: 0 0 10px rgba(0, 204, 102, 0.3);
+        }
+
+        .submit-btn:hover {
+            background: linear-gradient(135deg, #009944, #007733);
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(0, 204, 102, 0.4);
+        }
+
+        .submit-btn:disabled {
+            background: #374151;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        #alert-message {
+            color: #ff4444;
+            font-size: 13px;
+            margin-top: 8px;
+            min-height: 18px;
+        }
+
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            text-align: center;
+            display: none;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .correct {
+            background: rgba(0, 204, 102, 0.2);
+            color: #ffffff;
+            border: 2px solid #00cc66;
+            box-shadow: 0 0 15px rgba(0, 204, 102, 0.3);
+        }
+
+        .incorrect {
+            background: rgba(255, 68, 68, 0.2);
+            color: #ffffff;
+            border: 2px solid #ff4444;
+            box-shadow: 0 0 15px rgba(255, 68, 68, 0.3);
+        }
+
+        .timeout {
+            background: rgba(255, 170, 0, 0.2);
+            color: #ffffff;
+            border: 2px solid #ffaa00;
+            box-shadow: 0 0 15px rgba(255, 170, 0, 0.3);
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, #6633ff, #4411cc);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-size: 14px;
+            flex: 1;
+            box-shadow: 0 0 10px rgba(102, 51, 255, 0.3);
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #4411cc, #2200aa);
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(102, 51, 255, 0.4);
+        }
+
+        .nav-btn:disabled {
+            background: #374151;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .footer {
+            background: linear-gradient(135deg, #0a0a0f, #1a1a2e);
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            text-align: center;
+            margin-top: auto;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+            border-top: 1px solid rgba(0, 255, 255, 0.2);
+        }
+
+        .footer p {
+            margin: 3px 0;
+            color: #94a3b8;
+            font-size: 12px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(71, 85, 105, 0.5);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #00ffff, #0099cc);
+            transition: width 0.3s ease;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+        }
+
+        #three-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            opacity: 0.05;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .warning-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 68, 68, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            color: white;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            padding: 20px;
+        }
+
+        .elimination-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 20, 0.98);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .elimination-content {
+            background: linear-gradient(135deg, #1a1a2e, #0a0a0f);
+            padding: 30px 20px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+            border: 2px solid #ff4444;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        /* Mobile specific adjustments */
+        @media (max-width: 768px) {
+            .header {
+                padding: 8px 10px;
+            }
+            
+            .header-center h1 {
+                font-size: 16px;
+            }
+            
+            .header-center p {
+                font-size: 9px;
+            }
+            
+            .header-left {
+                font-size: 12px;
+            }
+            
+            .header-right {
+                width: 35px;
+                height: 35px;
+            }
+            
+            .main-content {
+                padding: 10px;
+            }
+            
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+                padding: 10px 8px;
+                gap: 8px;
+            }
+            
+            .stat-value {
+                font-size: 16px;
+            }
+            
+            .timer {
+                font-size: 18px;
+            }
+            
+            .challenge-card {
+                padding: 15px 10px;
+            }
+            
+            .challenge-title {
+                font-size: 14px;
+            }
+            
+            .code-container {
+                padding: 10px 8px;
+                max-height: 250px;
+            }
+            
+            .code-content {
+                font-size: 11px;
+                line-height: 1.3;
+            }
+            
+            .answer-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .answer-input {
+                min-width: auto;
+                margin-bottom: 10px;
+            }
+            
+            .submit-btn {
+                width: 100%;
+                padding: 15px;
+            }
+            
+            .navigation {
+                flex-direction: column;
+            }
+            
+            .nav-btn {
+                margin-bottom: 10px;
+                padding: 15px;
+            }
+            
+            .modal-content {
+                padding: 25px 15px;
+            }
+            
+            .modal-content h2 {
+                font-size: 18px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .code-content {
+                font-size: 10px;
+            }
+            
+            .challenge-title {
+                font-size: 13px;
+            }
+            
+            .result {
+                font-size: 13px;
+            }
+        }
+
+        /* Touch-friendly elements */
+        @media (hover: none) and (pointer: coarse) {
+            .btn, .submit-btn, .nav-btn {
+                min-height: 44px;
+            }
+            
+            .answer-input {
+                min-height: 44px;
+            }
+        }
+
+        /* Prevent zoom on input focus on iOS */
+        @media screen and (-webkit-min-device-pixel-ratio: 0) {
+            .answer-input, .modal-content input {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="three-canvas"></canvas>
+
+    <!-- Warning Modal -->
+    <div id="warningModal" class="warning-modal">
+        <div>
+            <h2>⚠️ WARNING ⚠️</h2>
+            <p id="warningText"></p>
+            <p>This is warning <span id="warningNumber"></span> of 2</p>
+            <p>Next violation will result in elimination!</p>
+        </div>
+    </div>
+
+    <!-- Elimination Modal -->
+    <div id="eliminationModal" class="elimination-modal">
+        <div class="elimination-content">
+            <h2>🚫 ELIMINATED 🚫</h2>
+            <p>You have been eliminated for cheating attempts.</p>
+            <div id="finalScoreDisplay"></div>
+        </div>
+    </div>
+
+    <!-- Welcome Modal -->
+    <div id="welcomeModal" class="welcome-modal">
+        <div class="modal-content">
+            <h2>🍭Welcome to Debug the Candy!🍭</h2>
+            <p>Enter your name to start the coding challenge</p>
+            <p style="color: #00ffff; font-size: 12px;">30 challenges • 90 seconds each</p>
+            <input type="text" id="playerName" placeholder="Enter your name" maxlength="30">
+            <br>
+            <button class="btn" onclick="startGame()">Start Game</button> <br><br>
+            <br>
+            <div id="no-name" style="color: #00ffff"></div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <span id="playerGreeting">Hello Player</span>
+        </div>
+        <div class="header-center">
+            <p>Innotech Club presents</p>
+            <h1>Debug the Candy</h1>
+        </div>
+        <div class="header-right">
+            <img id="logoImage" src="logo.png" alt="Innotech Club Logo" onerror="this.style.display='none'">
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div id="gameContainer" class="game-container">
+            <!-- Stats Bar -->
+            <div class="stats-bar">
+                <div class="stat">
+                    <div class="stat-value" id="currentChallenge">1</div>
+                    <div class="stat-label">Challenge</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="score">0</div>
+                    <div class="stat-label">Score</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="solved">0</div>
+                    <div class="stat-label">Solved</div>
+                </div>
+                <div class="timer-container">
+                    <div class="stat">
+                        <div class="stat-value timer" id="timer">90</div>
+                        <div class="stat-label">Seconds</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <!-- Challenge Card -->
+            <div class="challenge-card">
+                <div class="challenge-header">
+                    <h2 class="challenge-title" id="challengeTitle">Challenge 1</h2>
+                    <span class="difficulty-badge" id="difficultyBadge">Easy</span>
+                </div>
+                
+                <p id="challengeDescription">Find the bug in this code!</p>
+                
+                <div class="code-container">
+                    <div class="code-content" id="codeContent"></div>
+                </div>
+                
+                <div class="answer-section">
+                    <div class="input-group">
+                        <span class="input-label">Line:</span>
+                        <div id="wrongLine"></div>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-label">Fix:</span>
+                        <input type="text" class="answer-input" id="correctionInput" placeholder="Enter the corrected line of code">
+                    </div>
+                    <button class="submit-btn" id="submitBtn" onclick="submitAnswer()">Submit Answer</button>
+                    <div id="alert-message" style="color: #ff4444; font-size: 13px; min-height: 18px; font-weight: bold;"></div>
+                </div>
+                
+                <div id="result" class="result"></div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="navigation">
+                <button class="nav-btn" id="prevBtn" onclick="previousChallenge()" disabled>Previous</button>
+                <button class="nav-btn" id="nextBtn" onclick="nextChallenge()">Next</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2025 Innotech Club. All rights reserved.</p>
+        <p>Designed by Aryan Patnaik</p>
+    </footer>
+
+    <script>
+        // Three.js background animation
+        let scene, camera, renderer, particles;
+
+        function initThreeJS() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('three-canvas'), alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+
+            // Create particles
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            for (let i = 0; i < 500; i++) {
+                vertices.push(Math.random() * 2000 - 1000);
+                vertices.push(Math.random() * 2000 - 1000);
+                vertices.push(Math.random() * 2000 - 1000);
+            }
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+
+            const material = new THREE.PointsMaterial({ color: 0x00ffff, size: 1.5 });
+            particles = new THREE.Points(geometry, material);
+            scene.add(particles);
+
+            camera.position.z = 1000;
+            animate();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            particles.rotation.x += 0.0003;
+            particles.rotation.y += 0.0007;
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Anti-cheat functions
+        function enterFullscreen() {
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen().catch(err => {
+                    console.log('Fullscreen not supported or denied');
+                });
+            } else if (elem.mozRequestFullScreen) {
+                elem.mozRequestFullScreen();
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+            }
+        }
+
+        function showWarning(violationType) {
+            if (!gameActive) return;
+            
+            warningCount++;
+            document.getElementById('warningText').textContent = `You attempted to ${violationType}`;
+            document.getElementById('warningNumber').textContent = warningCount;
+            document.getElementById('warningModal').style.display = 'flex';
+
+            // Stop the game timer while warning is shown
+            stopTimer();
+
+            setTimeout(() => {
+                document.getElementById('warningModal').style.display = 'none';
+                
+                if (warningCount >= 2) {
+                    eliminatePlayer();
+                } else {
+                    // Resume timer if game is still active
+                    if (gameActive && currentChallengeIndex < shuffledChallenges.length) {
+                        startTimer();
+                    }
+                    // Try to re-enter fullscreen
+                    enterFullscreen();
+                }
+            }, 3000);
+        }
+
+        function eliminatePlayer() {
+            gameActive = false;
+            stopTimer();
+            
+            document.getElementById('finalScoreDisplay').innerHTML = `
+                <p>Final Score: <strong style="color: #00ffff;">${score} points</strong></p>
+                <p>Challenges Solved: <strong style="color: #00cc66;">${solved}/${currentChallengeIndex + 1}</strong></p>
+            `;
+            
+            document.getElementById('eliminationModal').style.display = 'flex';
+        }
+
+        // Event listeners for anti-cheat
+        function setupAntiCheat() {
+            // Disable right-click
+            document.addEventListener('contextmenu', function(e) {
+                if (gameActive) {
+                    e.preventDefault();
+                }
+            });
+
+            // Disable keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (!gameActive) return;
+                
+                // Disable F12, Ctrl+Shift+I, Ctrl+U, etc.
+                if (e.key === 'F12' || 
+                    (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+                    (e.ctrlKey && e.shiftKey && e.key === 'C') ||
+                    (e.ctrlKey && e.key === 'u') ||
+                    (e.ctrlKey && e.key === 'U') ||
+                    (e.ctrlKey && e.key === 'r') ||
+                    (e.ctrlKey && e.key === 'R') ||
+                    (e.key === 'F5')) {
+                    e.preventDefault();
+                    showWarning('use developer tools or refresh');
+                }
+            });
+
+            // Detect page visibility changes (tab switching)
+            document.addEventListener('visibilitychange', function() {
+                if (gameActive && document.hidden) {
+                    showWarning('switch tabs or minimize window');
+                }
+            });
+
+            // Detect window blur (losing focus)
+            window.addEventListener('blur', function() {
+                if (gameActive) {
+                    showWarning('switch to another application');
+                }
+            });
+
+            // Detect fullscreen changes
+            document.addEventListener('fullscreenchange', function() {
+                if (gameActive) {
+                    isInFullscreen = !!document.fullscreenElement;
+                    if (!isInFullscreen) {
+                        showWarning('exit fullscreen mode');
+                    }
+                }
+            });
+
+            document.addEventListener('webkitfullscreenchange', function() {
+                if (gameActive) {
+                    isInFullscreen = !!document.webkitFullscreenElement;
+                    if (!isInFullscreen) {
+                        showWarning('exit fullscreen mode');
+                    }
+                }
+            });
+
+            document.addEventListener('mozfullscreenchange', function() {
+                if (gameActive) {
+                    isInFullscreen = !!document.mozFullScreenElement;
+                    if (!isInFullscreen) {
+                        showWarning('exit fullscreen mode');
+                    }
+                }
+            });
+
+            // Prevent page refresh/close
+            window.addEventListener('beforeunload', function(e) {
+                if (gameActive) {
+                    const message = 'Are you sure you want to leave? Your progress will be lost!';
+                    e.returnValue = message;
+                    return message;
+                }
+            });
+        }
+
+        // Game Variables
+        let currentChallengeIndex = 0;
+        let score = 0;
+        let solved = 0;
+        let totalAttempts = 0;
+        let playerName = '';
+        let timeLeft = 90;
+        let timerInterval;
+        let shuffledChallenges = [];
+        let totalChallenges = 30;
+        
+        // Anti-cheat variables
+        let warningCount = 0;
+        let gameActive = false;
+        let isInFullscreen = false;
+
+        // Easy challenges - fixed indentation and header file issues
+        const easyOnlyChallenges = [
+            {
+                title: "Missing Semicolon",
+                difficulty: "easy",
+                description: "Find the syntax error in this C program",
+                code: `int main() {
+    int x = 10
+    printf("%d", x);
+    return 0;
+}`,
+                correctLine: 2,
+                correctCode: "int x = 10;",
+                explanation: "Missing semicolon after variable declaration"
+            },
+            {
+                title: "Uninitialized Variable",
+                difficulty: "easy",
+                description: "Find the logical error",
+                code: `int main() {
+    int a = 1.23;
+    printf("%f", a);
+    return 0;
+}`,
+                correctLine: 2,
+                correctCode: "float a = 1.23;",
+                explanation: "Variable 'a' is float value, not character value"
+            },
+            {
+                title: "Wrong Format Specifier",
+                difficulty: "easy",
+                description: "Find the printf format mistake",
+                code: `int main() {
+    int num = 25;
+    printf("%f", num);
+    return 0;
+}`,
+                correctLine: 3,
+                correctCode: 'printf("%d", num);',
+                explanation: "Should use %d for int, not %f"
+            },
+            {
+                title: "Array Index Out of Bounds",
+                difficulty: "easy",
+                description: "Find the array indexing error",
+                code: `int main() {
+    int arr[3] = {1, 2, 3};
+    printf("%d", arr[3]);
+    return 0;
+}`,
+                correctLine: 3,
+                correctCode: 'printf("%d", arr[2]);',
+                explanation: "Array index 3 is invalid (valid indices are 0-2)"
+            },
+            {
+                title: "Missing Return Type",
+                difficulty: "easy",
+                description: "Find the function declaration error",
+                code: `void main() {
+    printf("Hello World");
+    return 0;
+}`,
+                correctLine: 1,
+                correctCode: "int main() {",
+                explanation: "Main function should return int"
+            },
+            {
+                title: "String in Single Quotes",
+                difficulty: "easy",
+                description: "Find the string declaration error",
+                code: `int main() {
+    char name[] = 'Alice';
+    printf("%s", name);
+    return 0;
+}`,
+                correctLine: 2,
+                correctCode: 'char name[] = "Alice";',
+                explanation: "Strings in C must be in double quotes, not single quotes"
+            },
+            {
+                title: "Missing Address Operator",
+                difficulty: "easy",
+                description: "Find the scanf error",
+                code: `int main() {
+    int x;
+    scanf("%d", x);
+    printf("%d", x);
+    return 0;
+}`,
+                correctLine: 3,
+                correctCode: 'scanf("%d", &x);',
+                explanation: "Missing & before variable in scanf"
+            },
+            {
+                title: "Infinite Loop",
+                difficulty: "easy",
+                description: "Find the loop issue",
+                code: `int main() {
+    int i = 0;
+    while (i < 5) {
+        printf("%d ", i);
+        i--;
+    }
+    return 0;
+}`,
+                correctLine: 5,
+                correctCode: 'i++;"',
+                explanation: "Variable i should be incremented, not decremented, else it will go to infinite loop"
+            },
+            {
+                title: "Assignment vs Comparison",
+                difficulty: "easy",
+                description: "Why does it print 'x is 10' even when x is 5?",
+                code: `int main() {
+    int x = 5;
+    if (x = 10) {
+        printf("x is 10");
+    }
+    return 0;
+}`,
+                correctLine: 3,
+                correctCode: "if (x == 10) {",
+                explanation: "Should use == for comparison, not ="
+            },
+            {
+                title: "Extra Closing Brace",
+                difficulty: "easy",
+                description: "Find the syntax error",
+                code: `int main() {
+    int x = 10;
+    printf("%d", x);
+    return 0;
+}}`,
+                correctLine: 5,
+                correctCode: "}",
+                explanation: "Extra closing brace"
+            },
+            {
+                title: "Missing Return Statement",
+                difficulty: "easy",
+                description: "Find the missing return",
+                code: `int main() {
+    int x = 5, y = 10;
+    int sum = x + y;
+    printf("%d", sum);
+
+}`,
+                correctLine: 5,
+                correctCode: "return 0;",
+                explanation: "main should return 0 at the end"
+            },
+            {
+                title: "Division by Zero",
+                difficulty: "easy",
+                description: "Find the runtime error. Use '1' if you want to change any number.",
+                code: `int main() {
+    int a = 10, b = 0;
+    int c = a / b;
+    printf("%d", c);
+    return 0;
+}`,
+                correctLine: 2,
+                correctCode: "int a = 10, b = 1;",
+                explanation: "Division by zero is undefined"
+            },
+            {
+                title: "Case Sensitivity Error",
+                difficulty: "easy",
+                description: "Find the variable name mistake",
+                code: `int main() {
+    int Number = 5;     //Cannot change this line!
+    printf("%d", number);
+    return 0;
+}`,
+                correctLine: 3,
+                correctCode: 'printf("%d", Number);',
+                explanation: "Variable names are case sensitive: 'Number' vs 'number'"
+            },
+            {
+                title: "Wrong Array Size",
+                difficulty: "easy",
+                description: "Find the declaration error",
+                code: `int main() {
+    int arr[3] = {1, 2, 3, 4};
+    printf("%d", arr[0]);
+    return 0;
+}`,
+                correctLine: 2,
+                correctCode: "int arr[4] = {1, 2, 3, 4};",
+                explanation: "Array size 3 but initialized with 4 elements"
+            },
+            {
+                title: "Function Parameter Types",
+                difficulty: "easy",
+                description: "Find the function declaration issue",
+                code: `int add(int a, int b);
+int main() {
+    int sum = add(5, 10);
+    printf("%d", sum);
+    return 0;
+}
+int add(a, b) {
+    return a + b;
+}`,
+                correctLine: 7,
+                correctCode: "int add(int a, int b) {",
+                explanation: "Function parameters need types"
+            },
+            {
+                title: "Uninitialized Pointer",
+                difficulty: "easy",
+                description: "Find the pointer error",
+                code: `int main() {
+    int x = 5;
+    int *ptr;
+    *ptr = x;
+    printf("%d", *ptr);
+    return 0;
+}`,
+                correctLine: 4,
+                correctCode: "ptr = &x;",
+                explanation: "Pointer 'ptr' is uninitialized before dereferencing"
+            },
+            {
+                title: "String Without Null Terminator",
+                difficulty: "easy",
+                description: "Find the string initialization issue",
+                code: `int main() {
+    char str[6] = {'H','e','l','l','o'};
+    printf("%s", str);
+    return 0;
+}`,
+                correctLine: 2,
+                correctCode: "char str[6] = {'H','e','l','l','o','\\0'};",
+                explanation: "String must have null terminator '\\0'"
+            },
+            {
+                title: "Wrong Logical Operator",
+                difficulty: "easy",
+                description: "Find the logical operator mistake",
+                code: `int main() {
+    int age = 20;
+    if (age > 18 || age < 10) {
+        printf("Valid age");
+    }
+    return 0;
+}`,
+                correctLine: 3,
+                correctCode: "if (age > 18 && age < 100) {",
+                explanation: "Condition is always true, should use && for range check"
+            },
+            {
+                title: "Wrong Loop Condition",
+                difficulty: "easy",
+                description: "Find the for loop error",
+                code: `int main() {
+    for (int i = 1; i > 10; i++) {
+        printf("%d", i);
+    }
+    return 0;
+}`,
+                correctLine: 2,
+                correctCode: "for (int i = 1; i <= 10; i++) {",
+                explanation: "Loop condition should be i <= 10 or i < 11"
+            },
+            {
+                title: "Character Array Size",
+                difficulty: "easy",
+                description: "Find the string declaration mistake",
+                code: `int main() {
+    char msg[5] = "Hello";
+    printf("%s", msg);
+    return 0;
+}`,
+                correctLine: 2,
+                correctCode: 'char msg[6] = "Hello";',
+                explanation: "String \"Hello\" needs 6 chars including null terminator"
+            },
+            {
+                title: "Wrong Increment Expression",
+                difficulty: "easy",
+                description: "Find the error in loop update",
+                code: `int main() {
+    for (int i = 0; i < 5; i+1) {
+        printf("%d", i);
+    }
+    return 0;
+}`,
+                correctLine: 2,
+                correctCode: "for (int i = 0; i < 5; i++) {",
+                explanation: "Loop update should be i++ not i+1"
+            },
+            {
+                title: "Missing Break Statement",
+                difficulty: "easy",
+                description: "Find the switch-case issue",
+                code: `int main() {
+    int x = 2;
+    switch(x) {
+        case 1: printf("One");
+        case 2: printf("Two");
+        default: printf("Default");
+    }
+    return 0;
+}`,
+                correctLine: 5,
+                correctCode: 'case 1: printf("One"); break;',
+                explanation: "Missing break; statement causes fall-through"
+            },
+            {
+                title: "Wrong Character Format",
+                difficulty: "easy",
+                description: "Find the printf mistake",
+                code: `int main() {
+    char ch = 'A';
+    printf("%d", ch);
+    return 0;
+}`,
+                correctLine: 3,
+                correctCode: 'printf("%c", ch);',
+                explanation: "Should use %c for char, not %d"
+            },
+            {
+                title: "Function Parameter Count",
+                difficulty: "easy",
+                description: "Find the parameter mismatch",
+                code: `int sum(int a, int b) {
+    return a + b;
+}
+int main() {
+    int a = 10, b = 20;
+    int result = sum(a);
+    printf("%d", result);
+    return 0;
+}`,
+                correctLine: 6,
+                correctCode: "int result = sum(10, 20);",
+                explanation: "Function expects 2 arguments but only 1 provided"
+            },
+            {
+                title: "Misspelled Function",
+                difficulty: "easy",
+                description: "Find the function name error",
+                code: `int main() {
+    double result = squrt(16);
+    printf("%f", result);
+    return 0;
+}`,
+                correctLine: 3,
+                correctCode: "double result = sqrt(16);",
+                explanation: "sqrt function is misspelled"
+            },
+            {
+                title: "Variable Out of Scope",
+                difficulty: "easy",
+                description: "Find the scope error",
+                code: `int main() {
+    for (int i = 0; i < 5; i++) {
+        int temp = i * 2;
+    }
+    printf("%d", temp);
+    return 0;
+}`,
+                correctLine: 5,
+                correctCode: "// temp is not accessible here",
+                explanation: "Variable 'temp' is not accessible outside the for loop"
+            },
+            {
+                title: "Define with Semicolon",
+                difficulty: "easy",
+                description: "Find the constant definition error",
+                code: `#define PI 3.14;
+int main() {
+    double area = PI * 5 * 5;
+    printf("%f", area);
+    return 0;
+}`,
+                correctLine: 1,
+                correctCode: "#define PI 3.14",
+                explanation: "#define should not have semicolon"
+            },
+            {
+                title: "Unclosed Comment",
+                difficulty: "easy",
+                description: "Find the comment syntax error",
+                code: `int main() {
+    // This is a single line comment
+    /* This is a multi-
+    line comment /
+    printf("Hello World");
+    return 0;
+}`,
+                correctLine: 4,
+                correctCode: "line comment */",
+                explanation: "Multi-line comment is not properly closed with */"
+            },
+            {
+                title: "Wrong String Assignment",
+                difficulty: "easy",
+                description: "Find the string assignment error",
+                code: `int main() {
+    char msg = "Hello";
+    printf("%s", msg);
+    return 0;
+}`,
+                correctLine: 2,
+                correctCode: 'char msg[] = "Hello";',
+                explanation: "Strings must be stored in char arrays, not single char"
+            },
+            {
+                title: "Multiple Character Constant",
+                difficulty: "easy",
+                description: "Find the character constant error",
+                code: `int main() {
+    char c = 'AB';
+    printf("%c", c);
+    return 0;
+}`,
+                correctLine: 2,
+                correctCode: "char c = 'A';",
+                explanation: "Character constant must contain only one character"
+            }
+        ];
+        // Utility functions
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 90;
+            updateTimerDisplay();
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                
+                if (timeLeft <= 10) {
+                    document.getElementById('timer').classList.add('warning');
+                } else {
+                    document.getElementById('timer').classList.remove('warning');
+                }
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleTimeout();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            document.getElementById('timer').textContent = timeLeft;
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            document.getElementById('timer').classList.remove('warning');
+        }
+
+        function handleTimeout() {
+            const resultDiv = document.getElementById('result');
+            const challenge = shuffledChallenges[currentChallengeIndex];
+            
+            totalAttempts++;
+            resultDiv.className = 'result timeout show';
+            resultDiv.innerHTML = `
+                <strong>⏰ Time's Up!</strong><br>
+                Correct answer: Line ${challenge.correctLine}<br>
+                Correction: ${challenge.correctCode}<br>
+                <span style="color: #ffaa00; font-weight: bold;">${challenge.explanation}</span><br>
+                <small>0 points | Time expired</small>
+            `;
+            
+            // Disable submit button and inputs
+            document.getElementById('correctionInput').disabled = true;
+            document.getElementById('submitBtn').disabled = true;
+            
+            updateStats();
+            
+            // Auto move to next challenge after 4 seconds
+            setTimeout(() => {
+                nextChallenge();
+            }, 7000);
+        }
+
+        // Main game functions
+        function startGame() {
+            const nameInput = document.getElementById('playerName');
+            playerName = nameInput.value.trim();
+            
+            if (!playerName) {
+                document.getElementById('no-name').textContent = 'Please enter your name!';
+                return;
+            }
+            
+            // Initialize game state
+            shuffledChallenges = shuffleArray(easyOnlyChallenges).slice(0, totalChallenges);
+            currentChallengeIndex = 0;
+            score = 0;
+            solved = 0;
+            totalAttempts = 0;
+            warningCount = 0;
+            
+            // Activate anti-cheat and fullscreen
+            gameActive = true;
+            enterFullscreen();
+            
+            // Show game interface
+            document.getElementById('welcomeModal').style.display = 'none';
+            document.getElementById('gameContainer').style.display = 'block';
+            document.getElementById('playerGreeting').textContent = `Hello ${playerName}`;
+            
+            // Initialize Three.js and load first challenge
+            initThreeJS();
+            loadChallenge();
+        }
+
+        function loadChallenge() {
+            if (currentChallengeIndex >= shuffledChallenges.length) {
+                showGameComplete();
+                return;
+            }
+            
+            const challenge = shuffledChallenges[currentChallengeIndex];
+            
+            // Update challenge info
+            document.getElementById('challengeTitle').textContent = `Challenge ${currentChallengeIndex + 1}`;
+            document.getElementById('challengeDescription').textContent = challenge.description;
+            document.getElementById('difficultyBadge').textContent = 'Easy';
+            document.getElementById('wrongLine').textContent = challenge.correctLine;
+            
+            // Format code with line numbers and preserve indentation
+            const lines = challenge.code.split('\n');
+            let formattedCode = '';
+            lines.forEach((line, index) => {
+                formattedCode += `<span class="line-numbers">${String(index + 1).padStart(2, ' ')}:</span> ${line}\n`;
+            });
+            document.getElementById('codeContent').innerHTML = formattedCode;
+            
+            // Reset UI elements
+            document.getElementById('result').className = 'result';
+            document.getElementById('correctionInput').value = '';
+            document.getElementById('correctionInput').disabled = false;
+            document.getElementById('submitBtn').disabled = false;
+            
+            // Update navigation
+            document.getElementById('prevBtn').disabled = currentChallengeIndex === 0;
+            document.getElementById('nextBtn').disabled = currentChallengeIndex === shuffledChallenges.length - 1;
+            
+            // Update progress and stats
+            updateProgress();
+            updateStats();
+            
+            // Start timer and focus input
+            startTimer();
+        }
+
+        function submitAnswer() {
+            const userCorrection = document.getElementById('correctionInput').value.trim();
+            const challenge = shuffledChallenges[currentChallengeIndex];
+            const resultDiv = document.getElementById('result');
+            
+            if (!userCorrection) {
+                // alert('Please enter the corrected code!');
+                document.getElementById('alert-message').textContent = 'Please enter the Correct Code.';
+                return;
+            }
+            
+            stopTimer();
+            totalAttempts++;
+            const timeSpent = 90 - timeLeft;
+            
+            // Disable inputs and submit button
+            document.getElementById('correctionInput').disabled = true;
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('nextBtn').disabled = true;
+            
+            // Check if both line number and correction are correct
+            const codeCorrect = userCorrection.toLowerCase().includes(challenge.correctCode.toLowerCase().replace(/['"]/g, ''));
+            
+            if (codeCorrect) {
+                // Calculate points based on time
+                let points = 0;
+                if (timeSpent <= 15) {
+                    points = 3;
+                } else if (timeSpent <= 30) {
+                    points = 2;
+                } else {
+                    points = 1;
+                }
+                
+                score += points;
+                solved++;
+                resultDiv.className = 'result correct show';
+                
+                let timeMessage = '';
+                if (timeSpent <= 15) {
+                    timeMessage = 'Lightning fast! ⚡';
+                } else if (timeSpent <= 30) {
+                    timeMessage = 'Great job! 👍';
+                } else {
+                    timeMessage = 'Good work! 🎯';
+                }
+                
+                resultDiv.innerHTML = `
+                    <strong>🎉 Correct! ${timeMessage}</strong><br>
+                    <span style="color: #00cc66; font-weight: bold;">${challenge.explanation}</span><br>
+                    <small>+${points} points | Solved in ${timeSpent} seconds</small>
+                `;
+            } else {
+                resultDiv.className = 'result incorrect show';
+                let feedback = '';
+                if (!codeCorrect) {
+                    feedback = 'Both line number and correction are wrong';
+                }
+                
+                resultDiv.innerHTML = `
+                    <strong>❌ ${feedback}!</strong><br>
+                    Correct line: ${challenge.correctLine} | Correct code: ${challenge.correctCode}<br>
+                    <span style="color: #ff4444; font-weight: bold;">${challenge.explanation}</span><br>
+                    <small>0 points | Try again next time!</small>
+                `;
+            }
+            
+            updateStats();
+            
+            // Auto move to next challenge after 4 seconds
+            setTimeout(() => {
+                nextChallenge();
+            }, 7000);
+        }
+
+        function nextChallenge() {
+            if (currentChallengeIndex < shuffledChallenges.length - 1) {
+                currentChallengeIndex++;
+                loadChallenge();
+            } else {
+                showGameComplete();
+            }
+        }
+
+        function previousChallenge() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result incorrect show';
+            resultDiv.innerHTML = `
+                    <strong>You cannot go back!</strong><br>
+                `;
+        }
+
+        function showGameComplete() {
+            stopTimer();
+            gameActive = false;
+
+            document.querySelector('.challenge-card').innerHTML = `
+                <div style="text-align: center; padding: 30px 20px;">
+                    <h2 style="color: #00ffff; margin-bottom: 20px;">🎉 Game Complete! 🎉</h2>
+                    <div style="font-size: 16px; margin-bottom: 25px; line-height: 1.4;">
+                        <p>Congratulations ${playerName}!</p>
+                        <p>Final Score: <strong style="color: #00ffff;">${score} points</strong></p>
+                        <p>Challenges Solved: <strong style="color: #00cc66;">${solved}/${shuffledChallenges.length}</strong></p>
+                    </div>
+                    <button class="btn" onclick="restartGame()" style="width: 100%; padding: 15px;">Play Again</button>
+                </div>
+            `;
+            
+            // Hide navigation
+            document.querySelector('.navigation').style.display = 'none';
+        }
+
+        function restartGame() {
+            // Reset game state
+            currentChallengeIndex = 0;
+            score = 0;
+            solved = 0;
+            totalAttempts = 0;
+            warningCount = 0;
+            shuffledChallenges = shuffleArray(easyOnlyChallenges).slice(0, totalChallenges);
+            
+            // Reactivate anti-cheat and fullscreen
+            gameActive = true;
+            enterFullscreen();
+            
+            // Show navigation again
+            document.querySelector('.navigation').style.display = 'flex';
+            
+            // Load first challenge
+            loadChallenge();
+        }
+
+        function updateStats() {
+            document.getElementById('currentChallenge').textContent = currentChallengeIndex + 1;
+            document.getElementById('score').textContent = score;
+            document.getElementById('solved').textContent = solved;
+        }
+
+        function updateProgress() {
+            const progress = ((currentChallengeIndex + 1) / shuffledChallenges.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        // Event listeners
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                if (document.activeElement === document.getElementById('playerName')) {
+                    Start();
+                } else if (document.activeElement === document.getElementById('correctionInput') && !document.getElementById('submitBtn').disabled) {
+                    submitAnswer();
+                }
+            } else if (event.key === 'ArrowRight' && event.ctrlKey) {
+                nextChallenge();
+            } else if (event.key === 'ArrowLeft' && event.ctrlKey) {
+                previousChallenge();
+            }
+        });
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            setupAntiCheat();
+            setTimeout(() => {
+                document.getElementById('playerName').focus();
+            }, 500);
+        });
+    </script>
+</body>
+</html>
